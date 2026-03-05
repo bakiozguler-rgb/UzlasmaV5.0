@@ -1,0 +1,43 @@
+{
+  "name": "uzlasmatik",
+  "version": "1.0.0",
+  "description": "Uzlaştırma Dosya Yönetim Sistemi",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "sql.js": "^1.10.3",
+    "docxtemplater": "^3.44.0",
+    "pizzip": "^3.1.4"
+  },
+  "devDependencies": {
+    "electron": "^29.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.doganbaki.uzlasmatik",
+    "productName": "Uzlaşmatik",
+    "files": [
+      "src/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "icon.ico",
+      "uninstallerIcon": "icon.ico",
+      "installerHeaderIcon": "icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Uzlaşmatik"
+    }
+  }
+}

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'">
+  <title>Uzlaştırma Dosya Yönetimi</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/components.css">
+</head>
+<body>
+  <!-- Özel başlık çubuğu (frameless window) -->
+  <div id="title-bar">
+    <div id="title-bar-left">
+      <span class="app-icon">⚖</span>
+      <span class="app-title">Uzlaştırma Dosya Yönetimi</span>
+    </div>
+    <div id="title-bar-controls">
+      <button onclick="window.api.minimize()" title="Küçült">─</button>
+      <button onclick="window.api.maximize()" title="Büyüt">□</button>
+      <button onclick="window.api.kapat()" class="close-btn" title="Kapat">✕</button>
+    </div>
+  </div>
+
+  <!-- Ana yapı -->
+  <div id="app">
+    <!-- SOL PANEL: Araç çubuğu + Dosya listesi -->
+    <aside id="sidebar">
+      <div id="toolbar">
+        <button id="btn-dosya-ekle" class="btn btn-primary" title="UDF'den Dosya Ekle">
+          + Dosya Ekle
+        </button>
+        <button id="btn-arsiv-toggle" class="btn btn-secondary" title="Arşiv/Derdest">
+          📁 Arşiv
+        </button>
+        <button id="btn-dosya-kapat" class="btn btn-secondary" title="Seçili Dosyayı Kapat/Aç" disabled>
+          🔒 Kapat
+        </button>
+        <button id="btn-belge-uret" class="btn btn-accent" title="Belge Üret" disabled>
+          📄 Belge Üret
+        </button>
+        <button id="btn-hatirlatici" class="btn btn-icon" title="Hatırlatıcı Ekle">🔔</button>
+        <button id="btn-kullanici" class="btn btn-icon" title="Kullanıcı Bilgileri">👤</button>
+        <button id="btn-yedekle" class="btn btn-icon" title="Yedekleme">💾</button>
+      </div>
+
+      <!-- Arama -->
+      <div id="search-bar">
+        <input type="text" id="search-input" placeholder="Dosya No / Adliye / Ad Soyad..." />
+        <button id="btn-search">🔍</button>
+      </div>
+
+      <!-- Dosya listesi -->
+      <div id="dosya-listesi-baslik">
+        <span id="liste-baslik">Derdest Dosyalar</span>
+        <span id="dosya-sayisi">0 dosya</span>
+      </div>
+      <ul id="dosya-listesi"></ul>
+
+      <!-- Seçili dosyanın tarafları -->
+      <div id="taraf-ozet" style="display:none">
+        <div id="taraf-ozet-baslik">Taraflar</div>
+        <ul id="taraf-listesi-ozet"></ul>
+      </div>
+    </aside>
+
+    <!-- SAĞ PANEL: İçerik alanı -->
+    <main id="content">
+      <div id="hosgeldin">
+        <div class="hosgeldin-icon">⚖</div>
+        <h2>Uzlaştırma Dosya Yönetimi</h2>
+        <p id="hosgeldin-kullanici">Hoş geldiniz</p>
+        <p class="hint">Soldaki listeden bir dosya seçin veya yeni dosya ekleyin.</p>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODALLER -->
+  <div id="modal-overlay" style="display:none">
+    <!-- İçerik JS tarafından doldurulur -->
+    <div id="modal-box"></div>
+  </div>
+
+  <!-- HATIRLATMA POPUP -->
+  <div id="hatirlatma-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

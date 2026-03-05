@@ -1,0 +1,40 @@
+Tüm şablonlarda ortak kullanılır.
+DeğişkenAçıklama
+{{ADLIYE}}Adliye adı
+{{SORUSTURMA_NO}}Soruşturma numarası
+{{UZLASTIRMA_NO}}Uzlaştırma numarası
+{{SUC}}Suç türü
+{{GOREVLENDIRME_TARIHI}}Görevlendirme tarihi
+{{BUGUN_TARIHI}}Belge üretim tarihi
+
+👤 KULLANICI (UZLAŞTIRMACI) BİLGİLERİ
+Tüm şablonlarda ortak kullanılır.
+DeğişkenAçıklama
+{{UZL_AD_SOYAD}}Uzlaştırmacının adı soyadı
+{{UZL_SICIL_NO}}Sicil numarası
+{{UZL_ADRES}}Adresi
+{{UZL_TELEFON}}Telefonu
+
+👥 TARAF BİLGİLERİ
+Birden fazla taraf olacağı için docxtemplater ile döngü (loop) kullanılır.
+Tüm Taraflar Döngüsü — {#TARAFLAR}...{/TARAFLAR}
+Rapor gibi tüm tarafların listelendiği belgelerde kullanılır.
+DeğişkenAçıklama{#TARAFLAR}Döngü başlangıcı{{SIFAT}}Tarafın sıfatı (Müşteki, Şüpheli vb.){{AD_SOYAD}}Ad soyad{{TC_NO}}TC kimlik numarası{{BABA_ADI}}Baba adı{{ANNE_ADI}}Anne adı{{DOGUM_TARIHI}}Doğum tarihi{{ADRES}}Adres{{TELEFON}}Telefon{/TARAFLAR}Döngü sonu
+Tekil Taraf — Teklif Formu için (tek kişiye üretilir)
+DeğişkenAçıklama{{TARAF_SIFAT}}Tarafın sıfatı{{TARAF_AD_SOYAD}}Ad soyad{{TARAF_TC_NO}}TC kimlik numarası{{TARAF_BABA_ADI}}Baba adı{{TARAF_ANNE_ADI}}Anne adı{{TARAF_DOGUM_TARIHI}}Doğum tarihi{{TARAF_ADRES}}Adres{{TARAF_TELEFON}}Telefon
+
+📄 BELGEYE ÖZEL DEĞİŞKENLER
+Uzlaştırma Raporu
+DeğişkenAçıklama{{UZLASMA_TURU}}Olumsuz / Olumlu / Olumlu Edimli{{UZLASTIRMA_SONUCU}}Sonuç metin alanı{{EDIM_SEKLI_ZAMANI}}Edimin yerine getirilme şekli ve zamanı (sadece Olumlu Edimli'de)
+Ek Süre Talebi
+DeğişkenAçıklama{{EK_SURE_TURU}}1. Ek Süre / 2. Ek Süre{{EK_SURE_ICERIK}}İçerik metin alanı
+Talimat Talebi
+DeğişkenAçıklama{{TALIMAT_ADLIYE}}Talimat gönderilecek adliye{{TALIMAT_TARAF_AD_SOYAD}}İlgili taraf{{TALIMAT_ICERIK}}İçerik metin alanı
+Üst Yazı
+DeğişkenAçıklama{{UST_YAZI_ICERIK}}İçerik metin alanı
+
+🔧 ÖNERİLEN ELECTRON KÜTÜPHANELERİ
+Şablonları Electron içinde doldurmak için şu paketi öneririm:
+bashnpm install docxtemplater pizzip
+npm install docxtemplater-image-module-free  # görsel eklemek isterseniz
+docxtemplater döngü, koşul ({#ALAN}...{/ALAN}) ve değişken ikamesini Word şablonu bozulmadan destekler. PDF üretimi için de libreoffice --headless veya electron-pdf ile dönüşüm yapılabilir.

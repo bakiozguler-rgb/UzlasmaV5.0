@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ödeme Takip Sistemi</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #161b27;
+    --bg3: #1e2535;
+    --bg4: #252d40;
+    --border: #2d3550;
+    --border2: #3a4560;
+    --gold: #c9a84c;
+    --gold2: #e8c76a;
+    --gold-dim: rgba(201,168,76,0.15);
+    --text: #e8eaf2;
+    --text2: #9aa3bf;
+    --text3: #6b7699;
+    --green: #4caf87;
+    --green-bg: rgba(76,175,135,0.12);
+    --red: #e05c6a;
+    --red-bg: rgba(224,92,106,0.12);
+    --blue: #5b8dee;
+    --blue-bg: rgba(91,141,238,0.12);
+    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+    --radius: 10px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'IBM Plex Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  
+  /* HEADER */
+  .header { background:var(--bg2); border-bottom:1px solid var(--border); padding:0 28px; display:flex; align-items:center; justify-content:space-between; height:64px; position:sticky; top:0; z-index:100; }
+  .logo { display:flex; align-items:center; gap:12px; }
+  .logo-icon { width:36px; height:36px; background:linear-gradient(135deg,var(--gold),var(--gold2)); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px; }
+  .logo-text { font-family:'Playfair Display',serif; font-size:18px; color:var(--gold); letter-spacing:0.5px; }
+  .logo-sub { font-size:11px; color:var(--text3); letter-spacing:1px; text-transform:uppercase; }
+  .nav-tabs { display:flex; gap:4px; }
+  .nav-tab { padding:8px 18px; border-radius:7px; border:none; background:transparent; color:var(--text2); cursor:pointer; font-family:'IBM Plex Sans',sans-serif; font-size:13px; font-weight:500; transition:all .2s; letter-spacing:0.3px; }
+  .nav-tab.active { background:var(--gold-dim); color:var(--gold); }
+  .nav-tab:hover:not(.active) { background:var(--bg3); color:var(--text); }
+  .header-right { display:flex; align-items:center; gap:10px; }
+  .stat-badge { background:var(--bg3); border:1px solid var(--border); border-radius:7px; padding:6px 12px; font-size:12px; color:var(--text2); }
+  .stat-badge span { color:var(--gold); font-weight:600; }
+
+  /* MAIN */
+  .main { padding:24px 28px; max-width:1600px; }
+  .page { display:none; } .page.active { display:block; }
+
+  /* CARDS ROW */
+  .cards-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+  .card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:20px; }
+  .card-label { font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+  .card-value { font-size:24px; font-weight:600; font-family:'IBM Plex Mono',monospace; }
+  .card-value.gold { color:var(--gold); }
+  .card-value.green { color:var(--green); }
+  .card-value.red { color:var(--red); }
+  .card-value.blue { color:var(--blue); }
+  .card-sub { font-size:12px; color:var(--text3); margin-top:4px; }
+
+  /* TABLE */
+  .table-wrap { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  .table-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .table-title { font-size:14px; font-weight:600; color:var(--text); }
+  .table-actions { display:flex; gap:8px; }
+  .search-box { background:var(--bg3); border:1px solid var(--border); border-radius:7px; padding:7px 12px; color:var(--text); font-size:13px; font-family:'IBM Plex Sans',sans-serif; width:220px; outline:none; }
+  .search-box::placeholder { color:var(--text3); }
+  .search-box:focus { border-color:var(--gold); }
+  .btn { padding:8px 16px; border-radius:7px; border:none; cursor:pointer; font-size:13px; font-family:'IBM Plex Sans',sans-serif; font-weight:500; transition:all .2s; display:inline-flex; align-items:center; gap:6px; }
+  .btn-gold { background:var(--gold); color:#0f1117; }
+  .btn-gold:hover { background:var(--gold2); }
+  .btn-outline { background:transparent; border:1px solid var(--border2); color:var(--text2); }
+  .btn-outline:hover { border-color:var(--gold); color:var(--gold); }
+  .btn-sm { padding:5px 10px; font-size:12px; }
+  .btn-danger { background:var(--red-bg); border:1px solid var(--red); color:var(--red); }
+  table { width:100%; border-collapse:collapse; }
+  th { background:var(--bg3); padding:10px 14px; text-align:left; font-size:11px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.8px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  td { padding:10px 14px; font-size:13px; border-bottom:1px solid var(--border); color:var(--text); }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:rgba(255,255,255,0.02); }
+  .badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; letter-spacing:0.5px; }
+  .badge-green { background:var(--green-bg); color:var(--green); }
+  .badge-red { background:var(--red-bg); color:var(--red); }
+  .badge-gray { background:var(--bg3); color:var(--text3); }
+  .mono { font-family:'IBM Plex Mono',monospace; font-size:12px; }
+  .pagination { display:flex; align-items:center; gap:8px; padding:14px 20px; border-top:1px solid var(--border); justify-content:flex-end; }
+  .page-btn { width:30px; height:30px; border-radius:6px; border:1px solid var(--border); background:transparent; color:var(--text2); cursor:pointer; font-size:13px; transition:all .2s; display:flex; align-items:center; justify-content:center; }
+  .page-btn.active { background:var(--gold); color:#0f1117; border-color:var(--gold); }
+  .page-btn:hover:not(.active) { border-color:var(--gold); color:var(--gold); }
+  .page-info { font-size:12px; color:var(--text3); margin-right:8px; }
+
+  /* MODAL */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1000; display:none; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--bg2); border:1px solid var(--border2); border-radius:14px; width:680px; max-width:95vw; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:var(--shadow); animation:slideUp .25s ease; }
+  @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .modal-head { padding:20px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .modal-title { font-family:'Playfair Display',serif; font-size:18px; color:var(--gold); }
+  .modal-close { width:32px; height:32px; border-radius:7px; border:1px solid var(--border); background:transparent; color:var(--text2); cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; }
+  .modal-close:hover { border-color:var(--red); color:var(--red); }
+  .modal-body { padding:24px; overflow-y:auto; flex:1; }
+  .modal-footer { padding:16px 24px; border-top:1px solid var(--border); display:flex; gap:10px; justify-content:flex-end; }
+  
+  /* FORM */
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .form-group { display:flex; flex-direction:column; gap:6px; }
+  .form-group.full { grid-column:1/-1; }
+  label { font-size:12px; color:var(--text2); font-weight:500; letter-spacing:0.5px; }
+  .form-input { background:var(--bg3); border:1px solid var(--border); border-radius:7px; padding:9px 12px; color:var(--text); font-size:13px; font-family:'IBM Plex Sans',sans-serif; outline:none; transition:border .2s; }
+  .form-input:focus { border-color:var(--gold); }
+  .form-input::placeholder { color:var(--text3); }
+  select.form-input option { background:var(--bg3); }
+  .required-dot { width:6px; height:6px; background:var(--gold); border-radius:50%; display:inline-block; margin-left:4px; vertical-align:middle; }
+
+  /* REPORT PAGE */
+  .report-config { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:20px; }
+  .report-title { font-family:'Playfair Display',serif; font-size:16px; color:var(--gold); margin-bottom:16px; }
+  .filter-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:16px; }
+  .filter-group { display:flex; flex-direction:column; gap:5px; }
+  .filter-group label { font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:0.8px; }
+  .date-range { display:flex; gap:6px; align-items:center; }
+  .date-range span { color:var(--text3); font-size:12px; }
+  .report-types { display:flex; gap:8px; flex-wrap:wrap; }
+  .report-type-btn { padding:8px 16px; border-radius:7px; border:1px solid var(--border); background:transparent; color:var(--text2); cursor:pointer; font-size:13px; font-family:'IBM Plex Sans',sans-serif; transition:all .2s; }
+  .report-type-btn.selected { border-color:var(--gold); background:var(--gold-dim); color:var(--gold); }
+  .report-type-btn:hover { border-color:var(--border2); color:var(--text); }
+
+  /* REPORT WINDOW */
+  .report-window { position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:2000; display:none; align-items:center; justify-content:center; }
+  .report-window.open { display:flex; }
+  .report-box { background:var(--bg2); border:1px solid var(--border2); border-radius:14px; width:860px; max-width:96vw; max-height:92vh; display:flex; flex-direction:column; box-shadow:var(--shadow); animation:slideUp .25s ease; }
+  .report-box-head { padding:18px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .report-box-title { font-family:'Playfair Display',serif; font-size:16px; color:var(--gold); }
+  .report-actions { display:flex; gap:8px; }
+  .report-content { padding:24px; overflow-y:auto; flex:1; }
+
+  /* PRINT */
+  @media print {
+    body { background:#fff; color:#000; }
+    .header, .nav-tabs, .header-right, .report-window, .report-box-head { display:none!important; }
+    .report-print-area { display:block!important; }
+    table { width:100%; }
+    th, td { border:1px solid #ccc; padding:6px; }
+  }
+  .report-print-area { }
+
+  /* EMPTY */
+  .empty-state { text-align:center; padding:48px; color:var(--text3); }
+  .empty-state .empty-icon { font-size:48px; margin-bottom:12px; }
+  
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
+  
+  .divider { height:1px; background:var(--border); margin:16px 0; }
+  
+  .highlight-row td:first-child { border-left:3px solid var(--gold); }
+  
+  .chip-filter { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+  .chip { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:20px; font-size:12px; background:var(--bg3); border:1px solid var(--border); color:var(--text2); }
+  .chip button { background:none; border:none; color:var(--text3); cursor:pointer; font-size:14px; line-height:1; padding:0; }
+  .chip button:hover { color:var(--red); }
+
+  .summary-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
+  .sum-card { background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); padding:14px; }
+  .sum-card-lbl { font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:6px; }
+  .sum-card-val { font-size:20px; font-weight:700; font-family:'IBM Plex Mono',monospace; }
+  
+  .adliye-chart { display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+  .chart-row { display:flex; align-items:center; gap:10px; }
+  .chart-label { width:100px; font-size:12px; color:var(--text2); text-align:right; flex-shrink:0; }
+  .chart-bar-wrap { flex:1; background:var(--bg3); border-radius:4px; height:22px; overflow:hidden; }
+  .chart-bar { height:100%; background:linear-gradient(90deg,var(--gold),var(--gold2)); border-radius:4px; display:flex; align-items:center; padding-right:8px; justify-content:flex-end; }
+  .chart-bar-val { font-size:11px; font-family:'IBM Plex Mono',monospace; color:#0f1117; font-weight:700; white-space:nowrap; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">⚖</div>
+    <div>
+      <div class="logo-text">Ödeme Takip</div>
+      <div class="logo-sub">Arabuluculuk Yönetim Sistemi</div>
+    </div>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('dashboard')">📊 Özet</button>
+    <button class="nav-tab" onclick="showPage('table')">📋 Tablo</button>
+    <button class="nav-tab" onclick="showPage('entry')">➕ Veri Girişi</button>
+    <button class="nav-tab" onclick="showPage('reports')">📄 Raporlar</button>
+  </div>
+  <div class="header-right">
+    <div class="stat-badge">Toplam: <span id="hdr-total">0</span> Kayıt</div>
+    <div class="stat-badge">Toplam Ödeme: <span id="hdr-payment">0 ₺</span></div>
+    <button class="btn btn-outline" onclick="backupData()" style="font-size:12px;padding:6px 12px" title="Veriyi JSON olarak kaydet">💾 Yedekle</button>
+    <button id="auto-backup-btn" class="btn btn-outline" onclick="toggleAutoBackup()" style="font-size:12px;padding:6px 12px" title="Otomatik yedekleme">⚙ Oto Yedek: <span id="auto-backup-status">Kapalı</span></button>
+    <button class="btn btn-outline" onclick="document.getElementById('restore-input').click()" style="font-size:12px;padding:6px 12px" title="Yedekten geri yükle">📂 Geri Yükle</button>
+    <input type="file" id="restore-input" accept=".json" style="display:none" onchange="restoreData(event)">
+    <button class="btn btn-outline" onclick="showResetMenu()" style="font-size:12px;padding:6px 12px;color:var(--red);border-color:var(--red)" title="Veriyi sıfırla">🗑 Sıfırla</button>
+    <div id="reset-menu" style="display:none;position:fixed;top:64px;right:24px;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:8px;z-index:500;box-shadow:var(--shadow);min-width:220px">
+      <div style="font-size:11px;color:var(--text3);padding:6px 10px 8px;text-transform:uppercase;letter-spacing:.8px">Sıfırlama Seçeneği</div>
+      <button onclick="resetAll()" style="width:100%;text-align:left;padding:9px 12px;background:transparent;border:none;color:var(--text);cursor:pointer;border-radius:7px;font-size:13px;font-family:inherit" onmouseover="this.style.background='var(--red-bg)'" onmouseout="this.style.background='transparent'">🗑 Tüm kayıtları sil (boş başla)</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- DASHBOARD PAGE -->
+<div class="page active" id="page-dashboard">
+  <div class="cards-row">
+    <div class="card">
+      <div class="card-label">Toplam Dosya</div>
+      <div class="card-value blue" id="stat-total">0</div>
+      <div class="card-sub">Kayıtlı dosya sayısı</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Toplam Ödeme</div>
+      <div class="card-value gold" id="stat-payment">0 ₺</div>
+      <div class="card-sub">Tüm zamanlar</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Olumlu</div>
+      <div class="card-value green" id="stat-pos">0</div>
+      <div class="card-sub" id="stat-pos-pct">% 0</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Olumsuz</div>
+      <div class="card-value red" id="stat-neg">0</div>
+      <div class="card-sub" id="stat-neg-pct">% 0</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+    <div class="table-wrap">
+      <div class="table-header"><span class="table-title">📍 Adliye Bazlı Ödeme</span></div>
+      <div style="padding:16px;" id="adliye-chart"></div>
+    </div>
+    <div class="table-wrap">
+      <div class="table-header"><span class="table-title">🕐 Son 10 Kayıt</span></div>
+      <table id="recent-table">
+        <thead><tr><th>Dosya No</th><th>Adliye</th><th>Sonuç</th><th>Ödeme</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- TABLE PAGE -->
+<div class="page" id="page-table">
+  <div class="table-wrap">
+    <div class="table-header">
+      <span class="table-title">Tüm Kayıtlar</span>
+      <div class="table-actions">
+        <input class="search-box" id="search-input" placeholder="🔍 Dosya no, adliye ara..." oninput="renderTable()">
+        <select class="search-box" id="filter-adliye" onchange="renderTable()" style="width:140px;">
+          <option value="">Tüm Adliyeler</option>
+        </select>
+        <select class="search-box" id="filter-sonuc" onchange="renderTable()" style="width:130px;">
+          <option value="">Tüm Sonuçlar</option>
+        </select>
+        <button class="btn btn-gold" onclick="openAddModal()">+ Yeni Kayıt</button>
+      </div>
+    </div>
+    <table id="main-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>G. Tarihi</th>
+          <th>Adliye</th>
+          <th>Dosya No</th>
+          <th>Sonuç</th>
+          <th>T. Tarihi</th>
+          <th>Ödeme Tarihi</th>
+          <th>Ödeme (₺)</th>
+          <th>İşlem</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+
+<!-- ENTRY PAGE -->
+<div class="page" id="page-entry">
+  <div style="max-width:700px;">
+    <div class="table-wrap">
+      <div class="table-header">
+        <span class="table-title" id="entry-title">Yeni Kayıt Ekle</span>
+      </div>
+      <div style="padding:24px;">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>G. Tarihi</label>
+            <input type="date" class="form-input" id="f-gtarih">
+          </div>
+          <div class="form-group">
+            <label>Adliye</label>
+            <input list="adliye-list" class="form-input" id="f-adliye" placeholder="Adliye seçin veya yazın">
+            <datalist id="adliye-list"></datalist>
+          </div>
+          <div class="form-group">
+            <label>Dosya No</label>
+            <input class="form-input" id="f-dosya" placeholder="2025/123">
+          </div>
+          <div class="form-group">
+            <label>Sonuç</label>
+            <input list="sonuc-list" class="form-input" id="f-sonuc" placeholder="Sonuç seçin veya yazın">
+            <datalist id="sonuc-list"></datalist>
+          </div>
+          <div class="form-group">
+            <label>T. Tarihi</label>
+            <input type="date" class="form-input" id="f-ttarih">
+          </div>
+          <div class="form-group">
+            <label>Ödeme Tarihi</label>
+            <input type="date" class="form-input" id="f-odemetarih">
+          </div>
+          <div class="form-group full">
+            <label>Ödeme (₺)</label>
+            <input type="text" class="form-input" id="f-odeme" placeholder="0,00">
+          </div>
+        </div>
+        <div style="margin-top:20px; display:flex; gap:10px;">
+          <button class="btn btn-gold" onclick="saveEntry()">💾 Kaydet</button>
+          <button class="btn btn-outline" onclick="clearForm()">🗑 Temizle</button>
+          <button class="btn btn-outline" id="cancel-edit-btn" onclick="cancelEdit()" style="display:none; color:var(--red); border-color:var(--red);">✕ İptal</button>
+        </div>
+        <div id="entry-msg" style="margin-top:12px;font-size:13px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REPORTS PAGE -->
+<div class="page" id="page-reports">
+  <div class="report-config">
+    <div class="report-title">🔎 Rapor Filtreleri</div>
+    <div class="filter-grid">
+      <div class="filter-group">
+        <label>Adliye</label>
+        <select class="form-input" id="rpt-adliye">
+          <option value="">Tümü</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Sonuç</label>
+        <select class="form-input" id="rpt-sonuc">
+          <option value="">Tümü</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>G. Tarihi Aralığı</label>
+        <div class="date-range">
+          <input type="date" class="form-input" id="rpt-gtar1" style="flex:1">
+          <span>—</span>
+          <input type="date" class="form-input" id="rpt-gtar2" style="flex:1">
+        </div>
+      </div>
+      <div class="filter-group">
+        <label>Ödeme Tarihi Aralığı</label>
+        <div class="date-range">
+          <input type="date" class="form-input" id="rpt-otar1" style="flex:1">
+          <span>—</span>
+          <input type="date" class="form-input" id="rpt-otar2" style="flex:1">
+        </div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div style="margin-bottom:12px; font-size:12px; color:var(--text3); text-transform:uppercase; letter-spacing:0.8px;">Rapor Türü</div>
+    <div class="report-types">
+      <button class="report-type-btn selected" data-rtype="genel" onclick="selectReportType(this)">📊 Genel Özet</button>
+      <button class="report-type-btn" data-rtype="toplam-odeme" onclick="selectReportType(this)">💰 Toplam Ödeme</button>
+      <button class="report-type-btn" data-rtype="adliye-odeme" onclick="selectReportType(this)">🏛 Adliyeye Göre Ödeme</button>
+      <button class="report-type-btn" data-rtype="olumlu-olumsuz" onclick="selectReportType(this)">✅ Olumlu/Olumsuz Raporu</button>
+      <button class="report-type-btn" data-rtype="detay" onclick="selectReportType(this)">📋 Detay Listesi</button>
+    </div>
+    <div style="margin-top:16px;">
+      <button class="btn btn-gold" onclick="generateReport()" style="font-size:14px; padding:10px 24px;">📄 Rapor Oluştur</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- end main -->
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="entry-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title" id="modal-title">Yeni Kayıt</span>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>G. Tarihi</label>
+          <input type="date" class="form-input" id="m-gtarih">
+        </div>
+        <div class="form-group">
+          <label>Adliye</label>
+          <input list="m-adliye-list" class="form-input" id="m-adliye" placeholder="Adliye seçin veya yazın">
+          <datalist id="m-adliye-list"></datalist>
+        </div>
+        <div class="form-group">
+          <label>Dosya No</label>
+          <input class="form-input" id="m-dosya" placeholder="2025/123">
+        </div>
+        <div class="form-group">
+          <label>Sonuç</label>
+          <input list="m-sonuc-list" class="form-input" id="m-sonuc" placeholder="Sonuç seçin veya yazın">
+          <datalist id="m-sonuc-list"></datalist>
+        </div>
+        <div class="form-group">
+          <label>T. Tarihi</label>
+          <input type="date" class="form-input" id="m-ttarih">
+        </div>
+        <div class="form-group">
+          <label>Ödeme Tarihi</label>
+          <input type="date" class="form-input" id="m-odemetarih">
+        </div>
+        <div class="form-group full">
+          <label>Ödeme (₺)</label>
+          <input type="text" class="form-input" id="m-odeme" placeholder="0,00">
+        </div>
+      </div>
+      <div id="modal-msg" style="margin-top:12px;font-size:13px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">İptal</button>
+      <button class="btn btn-gold" onclick="saveModal()">💾 Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT WINDOW -->
+<div class="report-window" id="report-window">
+  <div class="report-box">
+    <div class="report-box-head">
+      <span class="report-box-title" id="rpt-box-title">Rapor</span>
+      <div class="report-actions">
+        <button class="btn btn-outline btn-sm" onclick="printReport()">🖨 Yazdır</button>
+        <button class="btn btn-outline btn-sm" onclick="saveReport()">💾 HTML Kaydet</button>
+        <button class="modal-close" onclick="closeReportWindow()">×</button>
+      </div>
+    </div>
+    <div class="report-content" id="rpt-content"></div>
+  </div>
+</div>
+
+<script>
+// ==================== DATA ====================
+const RAW = [["30.07.2018","EDREMİT","2018/692","OLUMSUZ","31.01.2026","19.10.2018","95,82"],["24.09.2018","EDREMİT","2018/847","OLUMLU","31.01.2026","15.11.2018","287,48"],["19.10.2018","EDREMİT","2018/1061","OLUMLU","31.01.2026","15.11.2018","287,48"],["19.10.2018","AYVALIK","2018/493","OLUMLU","31.01.2026","26.11.2018","287,48"],["19.10.2018","AYVALIK","2018/514","OLUMLU","31.01.2026","21.11.2018","287,48"],["24.10.2018","EDREMİT","2018/1221","OLUMSUZ","31.01.2026","25.12.2018","115,99"],["26.10.2018","BURHANİYE","2018/470","OLUMSUZ","31.01.2026","26.12.2018","95,82"],["05.11.2018","AYVALIK","2018/515","OLUMSUZ","31.01.2026","27.12.2018","143,73"],["12.11.2018","EDREMİT","2018/1364","OLUMSUZ","31.01.2026","27.11.2018","95,82"],["12.11.2018","EDREMİT","2018/1391","OLUMLU","31.01.2026","28.11.2018","287,48"],["02.01.2019","BURHANİYE","2018/604","OLUMLU","31.01.2026","29.11.2018","332,85"],["03.01.2019","AYVALIK","2018/652","OLUMLU","31.01.2026","30.11.2018","332,85"],["10.01.2019","BURHANİYE","2019/24","OLUMLU","31.01.2026","15.04.2019","340,85"],["11.01.2019","AYVALIK","2019/10","OLUMSUZ","31.01.2026","13.05.2019","110,00"],["18.01.2019","BURHANİYE","2019/48","OLUMLU","31.01.2026","12.04.2019","365,85"],["21.01.2019","EDREMİT","2019/79","OLUMLU","31.01.2026","11.04.2019","470,00"],["06.02.2019","EDREMİT","2019/216","OLUMSUZ","31.01.2026","11.04.2019","110,00"],["13.02.2019","EDREMİT","2019/240","OLUMSUZ","31.01.2026","11.04.2019","143,00"],["11.03.2019","EDREMİT","2019/469","OLUMSUZ","31.01.2026","12.04.2019","110,00"],["28.03.2019","AYVALIK","2019/209","OLUMSUZ","31.01.2026","13.04.2019","166,20"],["03.04.2019","EDREMİT","2019/584","OLUMLU","31.01.2026","10.07.2019","323,00"],["09.04.2019","EDREMİT","2019/607","OLUMSUZ","31.01.2026","07.08.2019","166,00"],["11.04.2019","BURHANİYE","2019/90","OLUMLU","31.01.2026","08.08.2019","332,85"],["25.04.2019","AYVALIK","2019/287","OLUMLU","31.01.2026","08.08.2019","332,85"],["08.05.2019","EDREMİT","2019/755","OLUMSUZ","31.01.2026","10.07.2019","150,00"],["19.07.2019","AYVALIK","2019/410","OLUMSUZ","31.01.2026","02.12.2019","111,00"],["19.07.2019","AYVALIK","2019/381","OLUMLU","31.01.2026","02.12.2019","332,00"],["30.07.2019","BURHANİYE","2019/399","OLUMLU","31.01.2026","11.10.2019","332,00"],["23.08.2019","EDREMİT","2019/1120","OLUMSUZ","31.01.2026","02.12.2019","110,00"],["02.10.2019","BURHANİYE","2019/556","OLUMLU","31.01.2026","29.11.2019","332,00"],["08.10.2019","EDREMİT","2019/1342","OLUMSUZ","31.01.2026","10.02.2020","110,00"],["10.10.2019","AYVALIK","2019/448","OLUMSUZ","31.01.2026","16.12.2019","166,00"],["16.10.2019","BURHANİYE","2019/579","OLUMLU","31.01.2026","16.12.2019","332,00"],["07.11.2019","BURHANİYE","2019/676","OLUMSUZ","31.01.2026","11.02.2020","110,00"],["13.11.2019","EDREMİT","2019/1598","OLUMLU","31.01.2026","10.02.2020","332,00"],["09.12.2019","BURHANİYE","2019/762","OLUMLU","31.01.2026","11.02.2020","332,00"],["12.12.2019","EDREMİT","2019/1680","OLUMSUZ","31.01.2026","09.04.2020","121,88"],["27.12.2019","EDREMİT","2019/1817","OLUMLU","31.01.2026","09.04.2020","374,87"],["27.12.2019","EDREMİT","2019/1822","OLUMSUZ","31.01.2026","09.04.2020","121,88"],["09.01.2020","BURHANİYE","2020/2","OLUMSUZ","31.01.2026","19.02.2020","110,00"],["16.01.2020","AYVALIK","2020/59","OLUMSUZ","31.01.2026","13.04.2020","121,00"],["07.02.2020","BURHANİYE","2020/85","OLUMSUZ","31.01.2026","28.09.2020","121,00"],["13.02.2020","AYVALIK","2019/574","OLUMSUZ","31.01.2026","01.10.2020","121,00"],["21.02.2020","EDREMİT","2020/307","OLUMLU","31.01.2026","09.04.2020","366,47"],["02.03.2020","BURHANİYE","2020/141","OLUMSUZ","31.01.2026","21.08.2020","121,00"],["16.03.2020","EDREMİT","2020/418","OLUMLU","31.01.2026","28.09.2020","366,00"],["02.06.2020","BURHANİYE","2020/209","OLUMLU","31.01.2026","21.08.2020","366,00"],["09.06.2020","EDREMİT","2020/390","OLUMSUZ","31.01.2026","17.11.2020","121,00"],["12.06.2020","AYVALIK","2020/204","OLUMSUZ","31.01.2026","01.10.2020","121,00"],["12.06.2020","AYVALIK","2020/184","OLUMLU","31.01.2026","01.10.2020","366,00"],["22.07.2020","EDREMİT","2020/641","OLUMLU","31.01.2026","28.09.2020","489,00"],["19.08.2020","EDREMİT","2020/426","OLUMSUZ","31.01.2026","30.12.2020","120,00"],["24.08.2020","EDREMİT","2020/699","OLUMSUZ","31.01.2026","17.11.2020","183,00"],["01.09.2020","EDREMİT","2020/585","OLUMLU","31.01.2026","17.11.2020","366,00"],["09.09.2020","AYVALIK","2020/360","OLUMLU","31.01.2026","17.02.2021","366,00"],["17.09.2020","AYVALIK","2020/377","OLUMLU","31.01.2026","20.11.2020","366,00"],["07.10.2020","BURHANİYE","2020/429","OLUMLU","31.01.2026","29.12.2020","366,00"],["13.10.2020","AYVALIK","2020/444","OLUMLU","31.01.2026","20.11.2020","366,00"],["23.10.2020","EDREMİT","2020/1068","OLUMSUZ","31.01.2026","30.12.2020","122,00"],["30.10.2020","BURHANİYE","2020/503","OLUMSUZ","31.01.2026","29.12.2020","122,00"],["27.11.2020","AYVALIK","2020/673","OLUMLU","31.01.2026","12.04.2021","366,00"],["02.12.2020","EDREMİT","2020/1316","OLUMLU","31.01.2026","30.12.2020","366,00"],["02.12.2020","EDREMİT","2020/1305","OLUMSUZ","31.01.2026","10.02.2021","134,00"],["21.12.2020","EDREMİT","2020/1540","OLUMSUZ","31.01.2026","11.03.2021","134,00"],["21.12.2020","EDREMİT","2020/1500","OLUMLU","31.01.2026","10.02.2021","420,00"],["23.12.2020","EDREMİT","2020/1488","OLUMSUZ","31.01.2026","08.04.2021","134,00"],["25.01.2021","BURHANİYE","2021/45","OLUMLU","31.01.2026","10.02.2021","404,00"],["28.01.2021","EDREMİT","2021/64","OLUMSUZ","31.01.2026","11.05.2021","134,00"],["10.02.2021","EDREMİT","2021/154","OLUMSUZ","31.01.2026","08.04.2021","134,00"],["22.02.2021","EDREMİT","2021/230","OLUMSUZ","31.01.2026","11.06.2021","134,00"],["16.03.2021","BURHANİYE","2021/109","OLUMLU","31.01.2026","11.06.2021","404,00"],["31.03.2021","BURHANİYE","2021/214","OLUMLU","31.01.2026","11.06.2021","404,00"],["01.04.2021","BURHANİYE","2021/219","OLUMSUZ","31.01.2026","11.06.2021","134,00"],["08.04.2021","AYVALIK","2021/175","OLUMSUZ","31.01.2026","11.06.2021","134,00"],["14.04.2021","BURHANİYE","2021/242","OLUMLU","31.01.2026","11.06.2021","404,00"],["14.04.2021","BURHANİYE","2021/238","OLUMSUZ","31.01.2026","11.06.2021","134,00"],["21.04.2021","EDREMİT","2021/599","OLUMLU","31.01.2026","14.07.2021","479,00"],["28.05.2021","BURHANİYE","2021/292","OLUMSUZ","31.01.2026","14.07.2021","134,00"],["28.05.2021","BURHANİYE","2021/286","OLUMLU","31.01.2026","14.07.2021","404,00"],["28.05.2021","BURHANİYE","2021/278","OLUMSUZ","31.01.2026","17.09.2021","200,00"],["08.06.2021","EDREMİT","2021/881","OLUMSUZ","31.01.2026","04.09.2021","134,00"],["08.06.2021","BURHANİYE","2021/299","OLUMLU","31.01.2026","14.07.2021","404,00"],["30.06.2021","AYVALIK","2021/312","OLUMSUZ","31.01.2026","18.10.2021","134,00"],["06.07.2021","AYVALIK","2021/321","OLUMSUZ","31.01.2026","06.09.2021","140,00"],["16.08.2021","AYVALIK","2021/356","OLUMSUZ","31.01.2026","12.11.2021","134,00"],["24.08.2021","BURHANİYE","2021/406","OLUMSUZ","31.01.2026","09.11.2021","134,00"],["25.08.2021","EDREMİT","2021/1249","OLUMLU","31.01.2026","13.10.2021","470,00"],["27.08.2021","EDREMİT","2021/1300","OLUMLU","31.01.2026","13.10.2021","420,00"],["15.09.2021","EDREMİT","2021/1383","OLUMLU","31.01.2026","13.12.2021","420,00"],["23.09.2021","EDREMİT","2021/1401","OLUMSUZ","31.01.2026","13.12.2021","200,00"],["04.10.2021","EDREMİT","2021/1412","OLUMSUZ","31.01.2026","13.12.2021","134,00"],["18.10.2021","AYVALIK","2021/459","OLUMLU","31.01.2026","13.12.2021","404,00"],["22.10.2021","BURHANİYE","2021/565","OLUMLU","31.01.2026","10.12.2021","420,00"],["01.11.2021","BURHANİYE","2021/633","OLUMSUZ","31.01.2026","10.12.2021","134,00"],["02.11.2021","EDREMİT","2021/1652","OLUMLU","31.01.2026","13.12.2021","420,00"],["12.11.2021","AYVALIK","2021/537","OLUMSUZ","31.01.2026","20.01.2022","134,00"],["13.12.2021","EDREMİT","2021/1928","OLUMSUZ","31.01.2026","09.02.2022","168,00"],["23.12.2021","BURHANİYE","2021/814","OLUMSUZ","31.01.2026","10.02.2022","168,00"],["06.01.2022","BURHANİYE","2021/827","OLUMSUZ","31.01.2026","05.04.2022","168,00"],["15.01.2022","EDREMİT","2022/39","OLUMLU","31.01.2026","09.02.2022","529,00"],["20.01.2022","BURHANİYE","2022/57","OLUMLU","31.01.2026","05.04.2022","168,00"],["03.02.2022","EDREMİT","2022/125","OLUMSUZ","31.01.2026","13.05.2022","252,00"],["12.03.2022","EDREMİT","2022/378","OLUMSUZ","31.01.2026","13.05.2022","252,00"],["06.04.2022","EDREMİT","2022/553","OLUMSUZ","31.01.2026","13.05.2022","294,00"],["30.03.2022","EDREMİT","2022/358","OLUMLU","31.01.2026","13.05.2022","529,00"],["04.04.2022","BURHANİYE","2022/203","OLUMSUZ","31.01.2026","17.05.2022","294,00"],["23.05.2022","EDREMİT","2022/732","OLUMSUZ","31.01.2026","07.07.2022","403,00"],["01.06.2022","AYVALIK","2022/238","OLUMLU","31.01.2026","08.07.2022","505,00"],["03.06.2022","EDREMİT","2022/847","OLUMSUZ","31.01.2026","10.10.2022","252,00"],["13.06.2022","AYVALIK","2022/266","OLUMSUZ","31.01.2026","08.10.2022","252,00"],["20.06.2022","EDREMİT","2022/966","OLUMSUZ","31.01.2026","26.08.2022","252,00"],["01.07.2022","BURHANİYE","2022/507","OLUMSUZ","31.01.2026","08.09.2022","168,00"],["01.07.2022","BURHANİYE","2022/407","OLUMLU","31.01.2026","11.08.2022","505,00"],["16.06.2022","AYVALIK","2022/268","OLUMSUZ","31.01.2026","14.11.2022","294,00"],["12.10.2022","AYVALIK","2022/333","OLUMSUZ","31.01.2026","16.01.2023","168,00"],["14.10.2022","AYVALIK","2022/440","OLUMSUZ","31.01.2026","07.03.2023","550,00"],["15.10.2022","EDREMİT","2022/1255","OLUMLU","31.01.2026","10.10.2022","529,00"],["22.08.2022","EDREMİT","2022/1274","OLUMSUZ","31.01.2026","11.11.2022","168,00"],["20.10.2022","BURHANİYE","2022/760","OLUMLU","31.01.2026","08.12.2022","756,00"],["26.10.2022","EDREMİT","2022/1624","OLUMLU","31.01.2026","11.11.2022","529,00"],["28.10.2022","EDREMİT","2022/1651","OLUMLU","31.01.2026","21.12.2022","529,00"],["23.11.2022","AYVALIK","2022/549","OLUMLU","31.01.2026","07.03.2023","1.000,00"],["02.12.2022","BURHANİYE","2022/910","OLUMSUZ","31.01.2026","24.01.2023","336,00"],["14.12.2022","EDREMİT","2022/1891","OLUMSUZ","31.01.2026","16.01.2023","588,00"],["14.12.2022","EDREMİT","2022/1988","OLUMSUZ","31.01.2026","13.03.2023","420,00"],["17.12.2022","AYVALIK","2022/631","OLUMSUZ","31.01.2026","07.03.2023","336,00"],["26.12.2022","AYVALIK","2022/651","OLUMSUZ","31.01.2026","06.03.2023","336,00"],["12.01.2023","BURHANİYE","2023/26","OLUMSUZ","31.01.2026","06.03.2023","381,00"],["20.01.2023","BURHANİYE","2023/66","OLUMSUZ","31.01.2026","06.03.2023","381,00"],["14.02.2023","AYVALIK","2023/66","OLUMSUZ","31.01.2026","11.05.2023","336,00"],["14.02.2023","AYVALIK","2023/101","OLUMSUZ","31.01.2026","11.05.2023","336,00"],["15.02.2023","AYVALIK","2023/130","OLUMSUZ","31.01.2026","14.08.2023","336,00"],["23.03.2023","AYVALIK","2023/226","OLUMSUZ","31.01.2026","05.10.2023","420,00"],["23.03.2023","EDREMİT","2023/288","OLUMLU","31.01.2026","23.06.2023","1.176,00"],["25.04.2023","EDREMİT","2023/394","OLUMSUZ","31.01.2026","14.08.2023","336,00"],["02.05.2023","AYVALIK","2023/344","OLUMSUZ","31.01.2026","22.06.2023","336,00"],["07.05.2023","EDREMİT","2023/557","OLUMLU","31.01.2026","23.06.2023","1.176,00"],["08.05.2023","EDREMİT","2023/501","OLUMSUZ","31.01.2026","23.06.2023","420,00"],["02.06.2023","EDREMİT","2023/711","OLUMLU","31.01.2026","14.08.2023","1.260,00"],["20.06.2023","EDREMİT","2023/847","OLUMLU","31.01.2026","14.08.2023","1.260,00"],["20.06.2023","EDREMİT","2023/845","OLUMLU","31.01.2026","14.08.2023","1.500,00"],["22.07.2023","EDREMİT","2023/931","OLUMSUZ","31.01.2026","29.11.2023","462,00"],["11.10.2023","BURHANİYE","2023/576","OLUMLU","31.01.2026","30.11.2023","1.428,00"],["19.10.2023","EDREMİT","2023/1233","OLUMSUZ","31.01.2026","19.12.2023","420,00"],["19.10.2023","EDREMİT","2023/1253","OLUMSUZ","31.01.2026","19.12.2023","420,00"],["20.10.2023","AYVALIK","2023/690","OLUMSUZ","31.01.2026","14.12.2023","420,00"],["20.10.2023","AYVALIK","2023/745","OLUMSUZ","31.01.2026","08.01.2024","504,00"],["31.10.2023","BURHANİYE","2023/635","OLUMSUZ","31.01.2026","12.12.2023","420,00"],["15.11.2023","EDREMİT","2023/1369","OLUMLU","31.01.2026","19.12.2023","1.092,00"],["23.11.2023","AYVALIK","2023/415","OLUMSUZ","31.01.2026","08.01.2024","504,00"],["04.12.2023","AYVALIK","2023/941","OLUMSUZ","31.01.2026","08.01.2024","504,00"],["02.01.2024","AYVALIK","2023/991","OLUMLU","31.01.2026","06.03.2024","1.491,00"],["12.02.2024","EDREMİT","2024/181","OLUMLU","31.01.2026","20.03.2024","1.596,00"],["15.02.2024","EDREMİT","2024/262","OLUMLU","31.01.2026","20.03.2024","1.765,00"],["22.02.2024","EDREMİT","2024/326","OLUMLU","31.01.2026","20.03.2024","1.596,00"],["18.03.2024","EDREMİT","2024/476","OLUMLU","31.01.2026","08.04.2024","1.596,00"],["20.03.2024","EDREMİT","2024/497","OLUMLU","31.01.2026","15.04.2024","1.596,00"],["18.04.2024","EDREMİT","2024/541","OLUMLU","31.01.2026","05.06.2024","1.596,00"],["29.04.2024","BURHANİYE","2024/223","OLUMSUZ","31.01.2026","06.06.2024","700,00"],["30.04.2024","EDREMİT","2024/571","OLUMSUZ","31.01.2026","07.06.2024","500,00"],["30.04.2024","EDREMİT","2024/585","OLUMSUZ","31.01.2026","08.06.2024","700,00"],["10.05.2024","EDREMİT","2024/663","OLUMLU","31.01.2026","09.06.2024","1.596,00"],["11.05.2024","EDREMİT","2024/659","OLUMSUZ","31.01.2026","10.06.2024","500,00"],["21.05.2024","EDREMİT","2024/616","OLUMLU","31.01.2026","11.06.2024","1.596,00"],["28.05.2024","EDREMİT","2024/820","OLUMLU","31.01.2026","05.06.2024","1.596,00"],["20.08.2024","AYVALIK","2024/592","OLUMLU","31.01.2026","09.10.2024","1.491,00"],["03.09.2024","EDREMİT","2024/1167","OLUMSUZ","31.01.2026","10.10.2024","650,00"],["06.09.2024","EDREMİT","2024/1237","OLUMSUZ","31.01.2026","11.10.2024","650,00"],["12.09.2024","EDREMİT","2024/1268","OLUMLU","31.01.2026","25.10.2024","1.900,00"],["17.09.2024","EDREMİT","2024/1267","OLUMSUZ","31.01.2026","26.10.2024","1.100,00"],["25.09.2024","BURHANİYE","2024/402","OLUMSUZ","31.01.2026","27.10.2024","500,00"],["02.10.2024","BURHANİYE","2024/478","OLUMLU","31.01.2026","28.10.2024","1.775,00"],["10.10.2024","EDREMİT","2024/1460","OLUMSUZ","31.01.2026","20.12.2024","650,00"],["06.12.2024","BURHANİYE","2024/710","OLUMSUZ","31.01.2026","17.01.2025","590,00"],["10.12.2024","BURHANİYE","2024/731","OLUMSUZ","31.01.2026","18.01.2025","1.100,00"],["12.12.2024","AYVALIK","2024/908","OLUMLU","31.01.2026","19.01.2025","3.520,00"],["19.12.2024","BURHANİYE","2024/682","OLUMLU","31.01.2026","20.01.2025","3.000,00"],["26.12.2025","BURHANİYE","2024/791","OLUMSUZ","31.01.2026","21.01.2025","1.100,00"],["29.12.2025","AYVALIK","2024/974","OLUMSUZ","31.01.2026","22.01.2025","1.000,00"],["02.01.2025","AYVALIK","2024/955","OLUMLU","31.01.2026","23.01.2025","3.000,00"],["11.01.2025","AYVALIK","2025/20","OLUMSUZ","31.01.2026","24.01.2025","1.500,00"],["17.01.2025","EDREMİT","2025/73","OLUMSUZ","31.01.2026","25.01.2025","1.100,00"],["31.01.2025","AYVALIK","2025/82","OLUMLU","31.01.2026","26.01.2025","3.000,00"],["21.03.2025","EDREMİT","2025/317","OLUMSUZ","31.01.2026","27.01.2025","1.100,00"],["08.04.2025","EDREMİT","2025/328","OLUMSUZ","31.01.2026","28.01.2025","1.000,00"],["11.04.2025","AYVALIK","2025/269","OLUMLU","31.01.2026","29.01.2025","3.000,00"],["12.04.2025","AYVALIK","2025/265","OLUMLU","31.01.2026","30.01.2025","3.000,00"],["24.04.2025","AYVALIK","2025/289","OLUMLU","31.01.2026","31.01.2025","3.000,00"],["27.05.2025","AYVALIK","2025/329","OLUMSUZ","31.01.2026","01.02.2025","1.100,00"],["07.07.2025","EDREMİT","2025/674","OLUMLU","31.01.2026","02.02.2025","3.900,00"],["08.07.2025","AYVALIK","2025/413","OLUMLU","31.01.2026","03.02.2025","3.000,00"],["28.08.2025","EDREMİT","2025/864","OLUMLU","31.01.2026","04.02.2025","3.500,00"],["29.08.2025","EDREMİT","2025/825","OLUMLU","31.01.2026","05.02.2025","3.500,00"],["25.09.2025","BURHANİYE","2025/562","OLUMLU","31.01.2026","06.02.2025","3.000,00"],["26.09.2025","AYVALIK","2025/488","OLUMSUZ","31.01.2026","07.02.2025","1.100,00"],["26.09.2025","AYVALIK","2025/481","OLUMLU","31.01.2026","08.02.2025","3.100,00"],["07.10.2025","EDREMİT","2025/986","OLUMSUZ","31.01.2026","09.02.2025","1.100,00"],["16.12.2025","EDREMİT","2025/1301","OLUMLU","26.01.2026","13.02.2026","4.300,00"],["29.12.2025","EDREMİT","2025/1357","","","",""],["16.01.2026","EDREMİT","2026/14","","","",""],["28.01.2026","EDREMİT","2026/97","","","",""],["08.02.2026","BURHANİYE","2026/83","","","",""]];
+
+const STORAGE_KEY = 'odeme_takip_v1';
+
+function loadRecords() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if(saved) {
+      const parsed = JSON.parse(saved);
+      if(Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch(e) {}
+  // localStorage boşsa RAW verisini yükle ve hemen kaydet
+  const initial = RAW.map((r,i) => ({
+    id: i+1,
+    gTarih: r[0]||'', adliye: r[1]||'', dosya: r[2]||'',
+    sonuc: r[3]||'', tTarih: r[4]||'', odemeTarih: r[5]||'',
+    odeme: r[6]||''
+  }));
+  saveRecords(initial);
+  return initial;
+}
+
+function saveRecords(data) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch(e) {
+    console.warn('localStorage yazma hatası:', e);
+  }
+  // Otomatik yedek aktifse dosyaya yaz
+  autoBackupWrite(data);
+}
+
+let records = loadRecords();
+let nextId = records.reduce((m,r)=>Math.max(m,r.id||0),0) + 1;
+let currentPage = 1;
+const PER_PAGE = 20;
+let editId = null;
+let selectedReportType = 'genel';
+
+// ==================== UTILS ====================
+function parseAmount(s) {
+  if(!s) return 0;
+  return parseFloat(s.replace(/\./g,'').replace(',','.')) || 0;
+}
+function fmtAmount(n) {
+  return n.toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function parseDateTR(s) {
+  if(!s) return null;
+  const p = s.split('.');
+  if(p.length===3) return new Date(p[2],p[1]-1,p[0]);
+  return new Date(s);
+}
+function toInputDate(s) {
+  if(!s) return '';
+  const p = s.split('.');
+  if(p.length===3) return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+  return s;
+}
+function fromInputDate(s) {
+  if(!s) return '';
+  const p = s.split('-');
+  if(p.length===3) return `${p[2]}.${p[1]}.${p[0]}`;
+  return s;
+}
+
+// ==================== INIT ====================
+function init() {
+  populateDrops();
+  updateStats();
+  renderTable();
+  renderDashboard();
+  initAutoBackup();
+}
+
+function populateAdliyeDrops() { populateDrops(); }
+
+function populateDrops() {
+  const adliyeler = [...new Set(records.map(r=>r.adliye).filter(Boolean))].sort();
+  const sonuclar  = [...new Set(records.map(r=>r.sonuc).filter(Boolean))].sort();
+
+  // Adliye select dropdownlar
+  ['filter-adliye','rpt-adliye'].forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    const first = el.options[0];
+    el.innerHTML = '';
+    el.add(first);
+    adliyeler.forEach(a => { const o = new Option(a,a); el.add(o); });
+  });
+
+  // Adliye datalistler
+  ['adliye-list','m-adliye-list'].forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.innerHTML = '';
+    adliyeler.forEach(a => { const o = document.createElement('option'); o.value=a; el.appendChild(o); });
+  });
+
+  // Sonuç select dropdownlar (filtre + rapor)
+  ['filter-sonuc','rpt-sonuc'].forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    const first = el.options[0];
+    el.innerHTML = '';
+    el.add(first);
+    sonuclar.forEach(s => { const o = new Option(s,s); el.add(o); });
+  });
+
+  // Sonuç datalistler
+  ['sonuc-list','m-sonuc-list'].forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.innerHTML = '';
+    sonuclar.forEach(s => { const o = document.createElement('option'); o.value=s; el.appendChild(o); });
+  });
+}
+
+function updateStats() {
+  const total = records.length;
+  const totalPay = records.reduce((s,r)=>s+parseAmount(r.odeme),0);
+  const pos = records.filter(r=>r.sonuc==='OLUMLU').length;
+  const neg = records.filter(r=>r.sonuc==='OLUMSUZ').length;
+  document.getElementById('hdr-total').textContent = total;
+  document.getElementById('hdr-payment').textContent = fmtAmount(totalPay) + ' ₺';
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-payment').textContent = fmtAmount(totalPay) + ' ₺';
+  document.getElementById('stat-pos').textContent = pos;
+  document.getElementById('stat-neg').textContent = neg;
+  document.getElementById('stat-pos-pct').textContent = `% ${total ? Math.round(pos/total*100) : 0}`;
+  document.getElementById('stat-neg-pct').textContent = `% ${total ? Math.round(neg/total*100) : 0}`;
+}
+
+function renderDashboard() {
+  // Adliye chart
+  const adliyeMap = {};
+  records.forEach(r => {
+    if(!r.adliye) return;
+    adliyeMap[r.adliye] = (adliyeMap[r.adliye]||0) + parseAmount(r.odeme);
+  });
+  const sorted = Object.entries(adliyeMap).sort((a,b)=>b[1]-a[1]);
+  const max = sorted[0]?.[1]||1;
+  const html = sorted.map(([a,v])=>`
+    <div class="chart-row">
+      <div class="chart-label">${a}</div>
+      <div class="chart-bar-wrap">
+        <div class="chart-bar" style="width:${Math.round(v/max*100)}%">
+          <span class="chart-bar-val">${fmtAmount(v)} ₺</span>
+        </div>
+      </div>
+    </div>`).join('');
+  document.getElementById('adliye-chart').innerHTML = `<div class="adliye-chart">${html}</div>`;
+  
+  // Recent table
+  const recent = [...records].reverse().slice(0,10);
+  const tbody = document.querySelector('#recent-table tbody');
+  tbody.innerHTML = recent.map(r=>`<tr>
+    <td class="mono">${r.dosya}</td>
+    <td>${r.adliye}</td>
+    <td>${r.sonuc ? `<span class="badge badge-${r.sonuc==='OLUMLU'?'green':'red'}">${r.sonuc}</span>` : '<span class="badge badge-gray">—</span>'}</td>
+    <td class="mono">${r.odeme ? fmtAmount(parseAmount(r.odeme))+' ₺' : '—'}</td>
+    <td><button class="btn btn-outline btn-sm" onclick="editRecord(${r.id})">✏</button></td>
+  </tr>`).join('');
+}
+
+// ==================== TABLE ====================
+function getFiltered() {
+  const q = (document.getElementById('search-input')?.value||'').toLowerCase();
+  const fa = document.getElementById('filter-adliye')?.value||'';
+  const fs = document.getElementById('filter-sonuc')?.value||'';
+  return records.filter(r => {
+    if(q && !r.dosya.toLowerCase().includes(q) && !r.adliye.toLowerCase().includes(q)) return false;
+    if(fa && r.adliye !== fa) return false;
+    if(fs && r.sonuc !== fs) return false;
+    return true;
+  });
+}
+
+function renderTable() {
+  const filtered = getFiltered();
+  const total = filtered.length;
+  const pages = Math.ceil(total/PER_PAGE);
+  if(currentPage > pages) currentPage = 1;
+  const start = (currentPage-1)*PER_PAGE;
+  const page = filtered.slice(start, start+PER_PAGE);
+  
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = page.map((r,i)=>`<tr>
+    <td style="color:var(--text3)">${start+i+1}</td>
+    <td class="mono">${r.gTarih||'—'}</td>
+    <td><span style="font-weight:500">${r.adliye||'—'}</span></td>
+    <td class="mono">${r.dosya||'—'}</td>
+    <td>${r.sonuc ? `<span class="badge badge-${r.sonuc==='OLUMLU'?'green':'red'}">${r.sonuc}</span>` : '<span class="badge badge-gray">—</span>'}</td>
+    <td class="mono">${r.tTarih||'—'}</td>
+    <td class="mono">${r.odemeTarih||'—'}</td>
+    <td class="mono" style="color:var(--gold)">${r.odeme ? fmtAmount(parseAmount(r.odeme))+' ₺' : '—'}</td>
+    <td>
+      <button class="btn btn-outline btn-sm" onclick="editRecord(${r.id})" style="margin-right:4px">✏</button>
+      <button class="btn btn-sm" style="background:var(--red-bg);border:1px solid var(--red);color:var(--red)" onclick="deleteRecord(${r.id})">✕</button>
+    </td>
+  </tr>`).join('');
+  
+  // Pagination
+  const pag = document.getElementById('pagination');
+  if(pages <= 1) { pag.innerHTML=''; return; }
+  let html = `<span class="page-info">${total} kayıt, ${pages} sayfa</span>`;
+  for(let p=1; p<=pages; p++) {
+    if(p===1||p===pages||Math.abs(p-currentPage)<=2) {
+      html += `<button class="page-btn ${p===currentPage?'active':''}" onclick="gotoPage(${p})">${p}</button>`;
+    } else if(Math.abs(p-currentPage)===3) {
+      html += `<span style="color:var(--text3);padding:0 4px">…</span>`;
+    }
+  }
+  pag.innerHTML = html;
+}
+
+function gotoPage(p) { currentPage = p; renderTable(); }
+
+function editRecord(id) {
+  const r = records.find(x=>x.id===id);
+  if(!r) return;
+  document.getElementById('modal-title').textContent = 'Kaydı Düzenle';
+  document.getElementById('m-gtarih').value = toInputDate(r.gTarih);
+  document.getElementById('m-adliye').value = r.adliye;
+  document.getElementById('m-dosya').value = r.dosya;
+  document.getElementById('m-sonuc').value = r.sonuc;
+  document.getElementById('m-ttarih').value = toInputDate(r.tTarih);
+  document.getElementById('m-odemetarih').value = toInputDate(r.odemeTarih);
+  document.getElementById('m-odeme').value = r.odeme;
+  editId = id;
+  document.getElementById('modal-msg').textContent = '';
+  document.getElementById('entry-modal').classList.add('open');
+}
+
+function deleteRecord(id) {
+  if(!confirm('Bu kayıt silinecek. Emin misiniz?')) return;
+  records = records.filter(r=>r.id!==id);
+  saveRecords(records);
+  renderTable(); updateStats(); renderDashboard();
+}
+
+// ==================== MODAL ====================
+function openAddModal() {
+  editId = null;
+  document.getElementById('modal-title').textContent = 'Yeni Kayıt Ekle';
+  ['m-gtarih','m-adliye','m-dosya','m-sonuc','m-ttarih','m-odemetarih','m-odeme'].forEach(id=>{
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('modal-msg').textContent = '';
+  document.getElementById('entry-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('entry-modal').classList.remove('open');
+  editId = null;
+}
+
+function saveModal() {
+  const r = {
+    gTarih: fromInputDate(document.getElementById('m-gtarih').value),
+    adliye: document.getElementById('m-adliye').value.trim().toUpperCase(),
+    dosya: document.getElementById('m-dosya').value.trim(),
+    sonuc: document.getElementById('m-sonuc').value,
+    tTarih: fromInputDate(document.getElementById('m-ttarih').value),
+    odemeTarih: fromInputDate(document.getElementById('m-odemetarih').value),
+    odeme: document.getElementById('m-odeme').value.trim()
+  };
+  const msg = document.getElementById('modal-msg');
+  if(!r.adliye && !r.dosya) { msg.style.color='var(--red)'; msg.textContent='En az Adliye veya Dosya No giriniz.'; return; }
+  if(editId) {
+    const idx = records.findIndex(x=>x.id===editId);
+    records[idx] = {...records[idx], ...r};
+    msg.style.color='var(--green)'; msg.textContent='Kayıt güncellendi.';
+  } else {
+    records.push({id: nextId++, ...r});
+    msg.style.color='var(--green)'; msg.textContent='Kayıt eklendi.';
+  }
+  saveRecords(records);
+  populateAdliyeDrops();
+  renderTable(); updateStats(); renderDashboard();
+  setTimeout(closeModal, 800);
+}
+
+// ==================== ENTRY PAGE ====================
+function saveEntry() {
+  const r = {
+    gTarih: fromInputDate(document.getElementById('f-gtarih').value),
+    adliye: document.getElementById('f-adliye').value.trim().toUpperCase(),
+    dosya: document.getElementById('f-dosya').value.trim(),
+    sonuc: document.getElementById('f-sonuc').value,
+    tTarih: fromInputDate(document.getElementById('f-ttarih').value),
+    odemeTarih: fromInputDate(document.getElementById('f-odemetarih').value),
+    odeme: document.getElementById('f-odeme').value.trim()
+  };
+  const msg = document.getElementById('entry-msg');
+  if(!r.adliye && !r.dosya) { msg.style.color='var(--red)'; msg.textContent='En az Adliye veya Dosya No giriniz.'; return; }
+  if(editId) {
+    const idx = records.findIndex(x=>x.id===editId);
+    records[idx] = {...records[idx], ...r};
+    msg.style.color='var(--green)'; msg.textContent='✅ Kayıt güncellendi!';
+    cancelEdit();
+  } else {
+    records.push({id: nextId++, ...r});
+    msg.style.color='var(--green)'; msg.textContent='✅ Kayıt eklendi!';
+    clearForm();
+  }
+  saveRecords(records);
+  populateAdliyeDrops();
+  renderTable(); updateStats(); renderDashboard();
+}
+
+function clearForm() {
+  ['f-gtarih','f-adliye','f-dosya','f-sonuc','f-ttarih','f-odemetarih','f-odeme'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+  document.getElementById('entry-msg').textContent='';
+}
+
+function cancelEdit() {
+  editId=null;
+  document.getElementById('entry-title').textContent='Yeni Kayıt Ekle';
+  document.getElementById('cancel-edit-btn').style.display='none';
+  clearForm();
+}
+
+// ==================== REPORTS ====================
+function selectReportType(btn) {
+  document.querySelectorAll('.report-type-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedReportType = btn.dataset.rtype;
+}
+
+function getReportFiltered() {
+  const adliye = document.getElementById('rpt-adliye').value;
+  const sonuc = document.getElementById('rpt-sonuc').value;
+  const gt1 = document.getElementById('rpt-gtar1').value;
+  const gt2 = document.getElementById('rpt-gtar2').value;
+  const ot1 = document.getElementById('rpt-otar1').value;
+  const ot2 = document.getElementById('rpt-otar2').value;
+  
+  return records.filter(r => {
+    if(adliye && r.adliye !== adliye) return false;
+    if(sonuc && r.sonuc !== sonuc) return false;
+    if(gt1 || gt2) {
+      const d = parseDateTR(r.gTarih);
+      if(!d) return false;
+      if(gt1 && d < new Date(gt1)) return false;
+      if(gt2 && d > new Date(gt2)) return false;
+    }
+    if(ot1 || ot2) {
+      const d = parseDateTR(r.odemeTarih);
+      if(!d) return false;
+      if(ot1 && d < new Date(ot1)) return false;
+      if(ot2 && d > new Date(ot2)) return false;
+    }
+    return true;
+  });
+}
+
+function generateReport() {
+  const data = getReportFiltered();
+  const total = data.length;
+  const totalPay = data.reduce((s,r)=>s+parseAmount(r.odeme),0);
+  const pos = data.filter(r=>r.sonuc==='OLUMLU');
+  const neg = data.filter(r=>r.sonuc==='OLUMSUZ');
+  
+  let filterDesc = buildFilterDesc();
+  let html = '';
+  const now = new Date().toLocaleString('tr-TR');
+  const hdr = `<div style="margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid var(--gold)">
+    <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--gold);margin-bottom:6px">⚖ Ödeme Takip Raporu</div>
+    <div style="font-size:12px;color:var(--text3)">Oluşturma: ${now}</div>
+    ${filterDesc ? `<div style="font-size:12px;color:var(--text2);margin-top:6px">Filtre: ${filterDesc}</div>` : ''}
+  </div>`;
+  
+  const sumCards = `<div class="summary-cards">
+    <div class="sum-card"><div class="sum-card-lbl">Toplam Dosya</div><div class="sum-card-val" style="color:var(--blue)">${total}</div></div>
+    <div class="sum-card"><div class="sum-card-lbl">Toplam Ödeme</div><div class="sum-card-val" style="color:var(--gold)">${fmtAmount(totalPay)} ₺</div></div>
+    <div class="sum-card"><div class="sum-card-lbl">Olumlu / Olumsuz</div><div class="sum-card-val"><span style="color:var(--green)">${pos.length}</span> / <span style="color:var(--red)">${neg.length}</span></div></div>
+  </div>`;
+  
+  if(selectedReportType === 'genel') {
+    html = hdr + sumCards + buildAdliyeTable(data) + buildSonucTable(data);
+  } else if(selectedReportType === 'toplam-odeme') {
+    html = hdr + sumCards + `<div style="text-align:center;padding:20px;"><div style="font-size:48px;font-family:'IBM Plex Mono',monospace;color:var(--gold)">${fmtAmount(totalPay)} ₺</div><div style="color:var(--text3);margin-top:8px">${total} dosya için toplam ödeme</div></div>`;
+  } else if(selectedReportType === 'adliye-odeme') {
+    html = hdr + sumCards + buildAdliyeTable(data);
+  } else if(selectedReportType === 'olumlu-olumsuz') {
+    html = hdr + sumCards + buildSonucTable(data) + buildSonucDetail(data);
+  } else if(selectedReportType === 'detay') {
+    html = hdr + sumCards + buildDetailTable(data);
+  }
+  
+  document.getElementById('rpt-box-title').textContent = 'Rapor - ' + new Date().toLocaleDateString('tr-TR');
+  document.getElementById('rpt-content').innerHTML = html;
+  document.getElementById('report-window').classList.add('open');
+}
+
+function buildFilterDesc() {
+  const parts = [];
+  const a = document.getElementById('rpt-adliye').value;
+  const s = document.getElementById('rpt-sonuc').value;
+  const gt1 = document.getElementById('rpt-gtar1').value;
+  const gt2 = document.getElementById('rpt-gtar2').value;
+  const ot1 = document.getElementById('rpt-otar1').value;
+  const ot2 = document.getElementById('rpt-otar2').value;
+  if(a) parts.push(`Adliye: ${a}`);
+  if(s) parts.push(`Sonuç: ${s}`);
+  if(gt1||gt2) parts.push(`G.Tarihi: ${gt1||'—'} → ${gt2||'—'}`);
+  if(ot1||ot2) parts.push(`Ödeme Tarihi: ${ot1||'—'} → ${ot2||'—'}`);
+  return parts.join(' | ');
+}
+
+function buildAdliyeTable(data) {
+  const map = {};
+  data.forEach(r => {
+    if(!r.adliye) return;
+    if(!map[r.adliye]) map[r.adliye] = {count:0, pay:0, pos:0, neg:0};
+    map[r.adliye].count++;
+    map[r.adliye].pay += parseAmount(r.odeme);
+    if(r.sonuc==='OLUMLU') map[r.adliye].pos++;
+    if(r.sonuc==='OLUMSUZ') map[r.adliye].neg++;
+  });
+  const rows = Object.entries(map).sort((a,b)=>b[1].pay-a[1].pay);
+  const total = rows.reduce((s,[,v])=>s+v.pay,0);
+  return `
+    <div style="margin-top:20px">
+      <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--gold)">🏛 Adliyeye Göre Ödeme</div>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr style="background:var(--bg3)">
+          <th style="padding:8px;text-align:left;font-size:11px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Adliye</th>
+          <th style="padding:8px;text-align:center;font-size:11px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Dosya</th>
+          <th style="padding:8px;text-align:center;font-size:11px;color:var(--green);text-transform:uppercase;border-bottom:1px solid var(--border)">Olumlu</th>
+          <th style="padding:8px;text-align:center;font-size:11px;color:var(--red);text-transform:uppercase;border-bottom:1px solid var(--border)">Olumsuz</th>
+          <th style="padding:8px;text-align:right;font-size:11px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Toplam Ödeme</th>
+          <th style="padding:8px;text-align:right;font-size:11px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Pay %</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map(([a,v])=>`<tr>
+            <td style="padding:8px;font-weight:600;border-bottom:1px solid var(--border)">${a}</td>
+            <td style="padding:8px;text-align:center;border-bottom:1px solid var(--border)">${v.count}</td>
+            <td style="padding:8px;text-align:center;border-bottom:1px solid var(--border);color:var(--green)">${v.pos}</td>
+            <td style="padding:8px;text-align:center;border-bottom:1px solid var(--border);color:var(--red)">${v.neg}</td>
+            <td style="padding:8px;text-align:right;font-family:'IBM Plex Mono',monospace;color:var(--gold);border-bottom:1px solid var(--border)">${fmtAmount(v.pay)} ₺</td>
+            <td style="padding:8px;text-align:right;border-bottom:1px solid var(--border);color:var(--text3)">${total?Math.round(v.pay/total*100):0}%</td>
+          </tr>`).join('')}
+          <tr style="background:var(--bg3)">
+            <td style="padding:8px;font-weight:700" colspan="4">GENEL TOPLAM</td>
+            <td style="padding:8px;text-align:right;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--gold)">${fmtAmount(total)} ₺</td>
+            <td style="padding:8px;text-align:right">100%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function buildSonucTable(data) {
+  const pos = data.filter(r=>r.sonuc==='OLUMLU');
+  const neg = data.filter(r=>r.sonuc==='OLUMSUZ');
+  const posP = pos.reduce((s,r)=>s+parseAmount(r.odeme),0);
+  const negP = neg.reduce((s,r)=>s+parseAmount(r.odeme),0);
+  return `
+    <div style="margin-top:20px">
+      <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--gold)">✅ Olumlu / Olumsuz Dağılımı</div>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr style="background:var(--bg3)">
+          <th style="padding:8px;text-align:left;font-size:11px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Sonuç</th>
+          <th style="padding:8px;text-align:center;font-size:11px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Adet</th>
+          <th style="padding:8px;text-align:right;font-size:11px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Toplam Ödeme</th>
+          <th style="padding:8px;text-align:right;font-size:11px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Oran</th>
+        </tr></thead>
+        <tbody>
+          <tr><td style="padding:8px;border-bottom:1px solid var(--border)"><span class="badge badge-green">OLUMLU</span></td>
+              <td style="padding:8px;text-align:center;border-bottom:1px solid var(--border)">${pos.length}</td>
+              <td style="padding:8px;text-align:right;font-family:'IBM Plex Mono',monospace;color:var(--green);border-bottom:1px solid var(--border)">${fmtAmount(posP)} ₺</td>
+              <td style="padding:8px;text-align:right;border-bottom:1px solid var(--border)">${data.length?Math.round(pos.length/data.length*100):0}%</td></tr>
+          <tr><td style="padding:8px;border-bottom:1px solid var(--border)"><span class="badge badge-red">OLUMSUZ</span></td>
+              <td style="padding:8px;text-align:center;border-bottom:1px solid var(--border)">${neg.length}</td>
+              <td style="padding:8px;text-align:right;font-family:'IBM Plex Mono',monospace;color:var(--red);border-bottom:1px solid var(--border)">${fmtAmount(negP)} ₺</td>
+              <td style="padding:8px;text-align:right;border-bottom:1px solid var(--border)">${data.length?Math.round(neg.length/data.length*100):0}%</td></tr>
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function buildSonucDetail(data) {
+  const pos = data.filter(r=>r.sonuc==='OLUMLU');
+  const neg = data.filter(r=>r.sonuc==='OLUMSUZ');
+  const table = (rows, color, label) => rows.length ? `
+    <div style="margin-top:16px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:${color}">${label} (${rows.length} dosya)</div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="background:var(--bg3)">
+          ${['G.Tarihi','Adliye','Dosya No','T.Tarihi','Ödeme Tarihi','Ödeme'].map(h=>`<th style="padding:6px 10px;text-align:left;border-bottom:1px solid var(--border);color:var(--text3)">${h}</th>`).join('')}
+        </tr></thead>
+        <tbody>${rows.map(r=>`<tr>
+          <td style="padding:6px 10px;border-bottom:1px solid var(--border)">${r.gTarih||'—'}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid var(--border)">${r.adliye||'—'}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace">${r.dosya||'—'}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid var(--border)">${r.tTarih||'—'}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid var(--border)">${r.odemeTarih||'—'}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;color:${color}">${r.odeme?fmtAmount(parseAmount(r.odeme))+' ₺':'—'}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>` : '';
+  return table(pos,'var(--green)','OLUMLU Dosyalar') + table(neg,'var(--red)','OLUMSUZ Dosyalar');
+}
+
+function buildDetailTable(data) {
+  return `
+    <div style="margin-top:16px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--gold)">Detay Listesi (${data.length} kayıt)</div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="background:var(--bg3)">
+          ${['#','G.Tarihi','Adliye','Dosya No','Sonuç','T.Tarihi','Ödeme Tarihi','Ödeme'].map(h=>`<th style="padding:6px 10px;text-align:left;border-bottom:1px solid var(--border);color:var(--text3)">${h}</th>`).join('')}
+        </tr></thead>
+        <tbody>${data.map((r,i)=>`<tr style="${i%2===0?'background:rgba(255,255,255,0.01)':''}">
+          <td style="padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text3)">${i+1}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid var(--border)">${r.gTarih||'—'}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid var(--border);font-weight:500">${r.adliye||'—'}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace">${r.dosya||'—'}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid var(--border)"><span style="color:${r.sonuc==='OLUMLU'?'var(--green)':r.sonuc==='OLUMSUZ'?'var(--red)':'var(--text3)'}">${r.sonuc||'—'}</span></td>
+          <td style="padding:6px 10px;border-bottom:1px solid var(--border)">${r.tTarih||'—'}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid var(--border)">${r.odemeTarih||'—'}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;color:var(--gold)">${r.odeme?fmtAmount(parseAmount(r.odeme))+' ₺':'—'}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+}
+
+
+
+// ==================== OTOMATİK YEDEK ====================
+const AUTO_BACKUP_DB = 'odeme_autobackup';
+let autoBackupHandle = null; // FileSystemFileHandle
+
+function openHandleDB() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open(AUTO_BACKUP_DB, 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('handles');
+    req.onsuccess = e => res(e.target.result);
+    req.onerror = e => rej(e);
+  });
+}
+
+async function saveHandleToDB(handle) {
+  const db = await openHandleDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction('handles', 'readwrite');
+    tx.objectStore('handles').put(handle, 'autoBackup');
+    tx.oncomplete = () => res();
+    tx.onerror = e => rej(e);
+  });
+}
+
+async function loadHandleFromDB() {
+  try {
+    const db = await openHandleDB();
+    return new Promise((res) => {
+      const tx = db.transaction('handles', 'readonly');
+      const req = tx.objectStore('handles').get('autoBackup');
+      req.onsuccess = e => res(e.target.result || null);
+      req.onerror = () => res(null);
+    });
+  } catch(e) { return null; }
+}
+
+async function clearHandleFromDB() {
+  const db = await openHandleDB();
+  return new Promise((res) => {
+    const tx = db.transaction('handles', 'readwrite');
+    tx.objectStore('handles').delete('autoBackup');
+    tx.oncomplete = () => res();
+  });
+}
+
+function updateAutoBackupUI(active) {
+  const btn = document.getElementById('auto-backup-btn');
+  const status = document.getElementById('auto-backup-status');
+  if(!btn || !status) return;
+  if(active) {
+    status.textContent = 'Açık';
+    btn.style.color = 'var(--green)';
+    btn.style.borderColor = 'var(--green)';
+  } else {
+    status.textContent = 'Kapalı';
+    btn.style.color = '';
+    btn.style.borderColor = '';
+  }
+}
+
+async function autoBackupWrite(data) {
+  if(!autoBackupHandle) return;
+  try {
+    const perm = await autoBackupHandle.queryPermission({mode:'readwrite'});
+    if(perm !== 'granted') {
+      const req = await autoBackupHandle.requestPermission({mode:'readwrite'});
+      if(req !== 'granted') { autoBackupHandle = null; updateAutoBackupUI(false); return; }
+    }
+    const json = JSON.stringify({version:1, exported: new Date().toISOString(), records: data}, null, 2);
+    const writable = await autoBackupHandle.createWritable();
+    await writable.write(json);
+    await writable.close();
+    // Küçük indicator güncelle
+    const status = document.getElementById('auto-backup-status');
+    if(status) {
+      const t = new Date().toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'});
+      status.textContent = 'Açık (' + t + ')';
+    }
+  } catch(e) {
+    console.warn('Otomatik yedek yazma hatası:', e);
+  }
+}
+
+async function toggleAutoBackup() {
+  if(autoBackupHandle) {
+    // Kapat
+    autoBackupHandle = null;
+    await clearHandleFromDB();
+    updateAutoBackupUI(false);
+    showToast('Otomatik yedekleme durduruldu.');
+  } else {
+    // Aç — dosya konumu seç
+    if(!window.showSaveFilePicker) {
+      showToast('Tarayıcınız bu özelliği desteklemiyor. Manuel yedekleme kullanın.', true);
+      return;
+    }
+    try {
+      const today = new Date().toISOString().slice(0,10);
+      const handle = await window.showSaveFilePicker({
+        suggestedName: 'odeme_otoyedek.json',
+        types: [{ description: 'JSON Yedek', accept: {'application/json': ['.json']} }]
+      });
+      autoBackupHandle = handle;
+      await saveHandleToDB(handle);
+      updateAutoBackupUI(true);
+      showToast('✅ Otomatik yedekleme başladı!');
+      autoBackupWrite(records); // hemen bir kez yaz
+    } catch(e) {
+      if(e.name !== 'AbortError') showToast('Hata: ' + e.message, true);
+    }
+  }
+}
+
+async function initAutoBackup() {
+  const handle = await loadHandleFromDB();
+  if(!handle) return;
+  // İzin durumunu kontrol et
+  try {
+    const perm = await handle.queryPermission({mode:'readwrite'});
+    autoBackupHandle = handle;
+    updateAutoBackupUI(true);
+    if(perm !== 'granted') {
+      // İzin gerekiyor — buton üzerinde uyar
+      const status = document.getElementById('auto-backup-status');
+      if(status) status.textContent = 'İzin Gerekli';
+      showToast('Otomatik yedek için butona tıklayarak izin verin.', false);
+    }
+  } catch(e) {
+    await clearHandleFromDB();
+  }
+}
+
+function backupData() {
+  const json = JSON.stringify({version:1, exported: new Date().toISOString(), records}, null, 2);
+  const blob = new Blob([json], {type:'application/json'});
+
+  // showSaveFilePicker destekleniyor mu?
+  if(window.showSaveFilePicker) {
+    const today = new Date().toISOString().slice(0,10);
+    window.showSaveFilePicker({
+      suggestedName: 'odeme_yedek_' + today + '.json',
+      types: [{ description: 'JSON Yedek', accept: {'application/json': ['.json']} }]
+    }).then(handle => handle.createWritable()).then(w => {
+      w.write(blob);
+      return w.close();
+    }).then(() => showToast('✅ Yedek kaydedildi!')).catch(e => {
+      if(e.name !== 'AbortError') showToast('Hata: ' + e.message, true);
+    });
+  } else {
+    // Fallback: klasik indirme
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'odeme_yedek_' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    showToast('✅ Yedek indirildi!');
+  }
+}
+
+function restoreData(event) {
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      const data = parsed.records || parsed; // eski format uyumluluğu
+      if(!Array.isArray(data)) throw new Error('Geçersiz format');
+      if(!confirm(data.length + ' kayıt yüklenecek. Mevcut veriler korunacak (üzerine eklenir). Devam edilsin mi?')) return;
+      const maxId = records.reduce((m,r)=>Math.max(m,r.id||0),0);
+      let added = 0;
+      data.forEach((r,i) => {
+        // Aynı dosya no + adliye varsa ekleme
+        const exists = records.some(x=>x.dosya===r.dosya && x.adliye===r.adliye);
+        if(!exists) {
+          records.push({...r, id: maxId + i + 1});
+          added++;
+        }
+      });
+      nextId = records.reduce((m,r)=>Math.max(m,r.id||0),0) + 1;
+      saveRecords(records);
+      populateDrops();
+      renderTable(); updateStats(); renderDashboard();
+      showToast('✅ ' + added + ' kayıt eklendi, ' + (data.length-added) + ' tekrar atlandı.');
+    } catch(err) {
+      showToast('❌ Dosya okunamadı: ' + err.message, true);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = ''; // aynı dosyayı tekrar seçebilmek için sıfırla
+}
+
+
+function showResetMenu() {
+  const m = document.getElementById('reset-menu');
+  m.style.display = m.style.display === 'none' ? 'block' : 'none';
+}
+
+// Menüyü dışarı tıklayınca kapat
+document.addEventListener('click', e => {
+  const menu = document.getElementById('reset-menu');
+  const btn = e.target.closest('[onclick="showResetMenu()"]');
+  if(!btn && menu && !menu.contains(e.target)) menu.style.display = 'none';
+});
+
+function resetAll() {
+  document.getElementById('reset-menu').style.display = 'none';
+  if(!confirm('Tüm kayıtlar silinecek! Bu işlem geri alınamaz.\nÖnce yedeklemenizi öneririz. Devam edilsin mi?')) return;
+  records = [];
+  nextId = 1;
+  saveRecords(records);
+  populateDrops(); renderTable(); updateStats(); renderDashboard();
+  showToast('✅ Tüm kayıtlar silindi.');
+}
+
+function resetToOriginal() {
+  document.getElementById('reset-menu').style.display = 'none';
+  if(!confirm('Tüm değişiklikler silinip orijinal ODS verisine dönülecek. Devam edilsin mi?')) return;
+  records = RAW.map((r,i) => ({
+    id: i+1,
+    gTarih: r[0]||'', adliye: r[1]||'', dosya: r[2]||'',
+    sonuc: r[3]||'', tTarih: r[4]||'', odemeTarih: r[5]||'',
+    odeme: r[6]||''
+  }));
+  nextId = records.length + 1;
+  populateDrops(); renderTable(); updateStats(); renderDashboard();
+  showToast('✅ Orijinal veriye dönüldü.');
+}
+
+function showToast(msg, isError=false) {
+  let t = document.getElementById('toast');
+  if(!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.cssText = 'position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;transition:opacity .4s;box-shadow:0 4px 20px rgba(0,0,0,.4)';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.background = isError ? 'var(--red-bg)' : 'var(--green-bg)';
+  t.style.border = '1px solid ' + (isError ? 'var(--red)' : 'var(--green)');
+  t.style.color = isError ? 'var(--red)' : 'var(--green)';
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>{ t.style.opacity='0'; }, 3000);
+}
+
+function closeReportWindow() {
+  document.getElementById('report-window').classList.remove('open');
+}
+
+function printReport() {
+  const data = getReportFiltered();
+  const totalPay = data.reduce((s,r)=>s+parseAmount(r.odeme),0);
+  const pos = data.filter(r=>r.sonuc==='OLUMLU');
+  const neg = data.filter(r=>r.sonuc==='OLUMSUZ');
+  const filterDesc = buildFilterDesc();
+  const now = new Date().toLocaleString('tr-TR');
+
+  const adliyeMap = {};
+  data.forEach(r => {
+    if(!r.adliye) return;
+    if(!adliyeMap[r.adliye]) adliyeMap[r.adliye] = {count:0,pay:0,pos:0,neg:0};
+    adliyeMap[r.adliye].count++;
+    adliyeMap[r.adliye].pay += parseAmount(r.odeme);
+    if(r.sonuc==='OLUMLU') adliyeMap[r.adliye].pos++;
+    if(r.sonuc==='OLUMSUZ') adliyeMap[r.adliye].neg++;
+  });
+  const adliyeRows = Object.entries(adliyeMap).sort((a,b)=>b[1].pay-a[1].pay);
+
+  let detayHTML = '';
+  if(['detay','genel','olumlu-olumsuz'].includes(selectedReportType)) {
+    detayHTML = '<h3 style="margin:18px 0 6px">Detay Listesi (' + data.length + ' Kayit)</h3>'
+      + '<table><thead><tr><th>#</th><th>G. Tarihi</th><th>Adliye</th><th>Dosya No</th><th>Sonuc</th><th>T. Tarihi</th><th>Odeme Tarihi</th><th style="text-align:right">Odeme (TL)</th></tr></thead><tbody>'
+      + data.map((r,i) => '<tr><td>' + (i+1) + '</td><td>' + (r.gTarih||'-') + '</td><td>' + (r.adliye||'-') + '</td><td>' + (r.dosya||'-') + '</td><td>' + (r.sonuc||'-') + '</td><td>' + (r.tTarih||'-') + '</td><td>' + (r.odemeTarih||'-') + '</td><td style="text-align:right">' + (r.odeme ? fmtAmount(parseAmount(r.odeme)) : '-') + '</td></tr>').join('')
+      + '<tr style="font-weight:bold;border-top:2px solid #000"><td colspan="7" style="text-align:right">TOPLAM:</td><td style="text-align:right">' + fmtAmount(totalPay) + '</td></tr>'
+      + '</tbody></table>';
+  }
+
+  let adliyeHTML = '';
+  if(['adliye-odeme','genel'].includes(selectedReportType)) {
+    adliyeHTML = '<h3 style="margin:18px 0 6px">Adliyeye Gore Ozet</h3>'
+      + '<table><thead><tr><th>Adliye</th><th style="text-align:center">Dosya</th><th style="text-align:center">Olumlu</th><th style="text-align:center">Olumsuz</th><th style="text-align:right">Toplam Odeme (TL)</th></tr></thead><tbody>'
+      + adliyeRows.map(([a,v]) => '<tr><td>' + a + '</td><td style="text-align:center">' + v.count + '</td><td style="text-align:center">' + v.pos + '</td><td style="text-align:center">' + v.neg + '</td><td style="text-align:right">' + fmtAmount(v.pay) + '</td></tr>').join('')
+      + '<tr style="font-weight:bold;border-top:2px solid #000"><td>TOPLAM</td><td style="text-align:center">' + data.length + '</td><td style="text-align:center">' + pos.length + '</td><td style="text-align:center">' + neg.length + '</td><td style="text-align:right">' + fmtAmount(totalPay) + '</td></tr>'
+      + '</tbody></table>';
+  }
+
+  const ozet = '<div class="ozet"><div class="ozet-item"><div class="lbl">Toplam Dosya</div><div class="val">' + data.length + '</div></div>'
+    + '<div class="ozet-item"><div class="lbl">Toplam Odeme</div><div class="val">' + fmtAmount(totalPay) + ' TL</div></div>'
+    + '<div class="ozet-item"><div class="lbl">Olumlu</div><div class="val">' + pos.length + ' (' + (data.length?Math.round(pos.length/data.length*100):0) + '%)</div></div>'
+    + '<div class="ozet-item"><div class="lbl">Olumsuz</div><div class="val">' + neg.length + ' (' + (data.length?Math.round(neg.length/data.length*100):0) + '%)</div></div></div>';
+
+  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Odeme Raporu</title>'
+    + '<style>body{font-family:Arial,sans-serif;font-size:12px;color:#000;background:#fff;margin:20px}'
+    + 'h1{font-size:16px;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:4px}'
+    + 'h3{font-size:13px;margin-bottom:4px}.meta{font-size:11px;color:#555;margin-bottom:4px}'
+    + '.ozet{display:flex;gap:30px;margin:12px 0;padding:10px;border:1px solid #ccc;background:#f9f9f9}'
+    + '.ozet-item .lbl{font-size:10px;text-transform:uppercase;color:#666}'
+    + '.ozet-item .val{font-size:16px;font-weight:bold}'
+    + 'table{width:100%;border-collapse:collapse;margin-bottom:12px}'
+    + 'th{background:#f0f0f0;border:1px solid #ccc;padding:5px 8px;text-align:left;font-size:11px}'
+    + 'td{border:1px solid #ccc;padding:5px 8px;font-size:11px}'
+    + 'tr:nth-child(even) td{background:#fafafa}'
+    + '@media print{@page{margin:15mm}}</style></head><body>'
+    + '<h1>Arabuluculuk Odeme Raporu</h1>'
+    + '<div class="meta">Olusturma: ' + now + '</div>'
+    + (filterDesc ? '<div class="meta">Filtre: ' + filterDesc + '</div>' : '')
+    + ozet + adliyeHTML + detayHTML
+    + '</body></html>';
+
+  const win = window.open('', '_blank', 'width=900,height=700');
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(function(){ win.print(); }, 400);
+}
+
+function saveReport() {
+  const content = document.getElementById('rpt-content').innerHTML;
+  const full = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Rapor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>:root{--bg:#0f1117;--bg2:#161b27;--bg3:#1e2535;--border:#2d3550;--gold:#c9a84c;--text:#e8eaf2;--text2:#9aa3bf;--text3:#6b7699;--green:#4caf87;--red:#e05c6a;--blue:#5b8dee;--green-bg:rgba(76,175,135,0.12);--red-bg:rgba(224,92,106,0.12)}body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);padding:30px}.badge{display:inline-flex;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}.badge-green{background:var(--green-bg);color:var(--green)}.badge-red{background:var(--red-bg);color:var(--red)}.summary-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}.sum-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px}.sum-card-lbl{font-size:11px;color:var(--text3);text-transform:uppercase;margin-bottom:6px}.sum-card-val{font-size:20px;font-weight:700;font-family:'IBM Plex Mono',monospace}</style>
+  </head><body>${content}</body></html>`;
+  const blob = new Blob([full], {type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'rapor_' + new Date().toISOString().slice(0,10) + '.html';
+  a.click();
+}
+
+// ==================== NAV ====================
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t => {
+    if(t.textContent.includes(name==='dashboard'?'Özet':name==='table'?'Tablo':name==='entry'?'Veri':name==='reports'?'Rapor':'')) t.classList.add('active');
+  });
+  if(name==='table') renderTable();
+}
+
+// Close modals on overlay click
+document.getElementById('entry-modal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
+document.getElementById('report-window').addEventListener('click', e => { if(e.target===e.currentTarget) closeReportWindow(); });
+
+// ESC key
+document.addEventListener('keydown', e => {
+  if(e.key==='Escape') { closeModal(); closeReportWindow(); }
+});
+
+init();
+</script>
+</body>
+</html>
