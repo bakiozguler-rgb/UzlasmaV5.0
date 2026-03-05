@@ -5,6 +5,7 @@
   "main": "src/main/main.js",
   "scripts": {
     "start": "electron .",
+    "dev": "electron .",
     "dist": "electron-builder"
   },
   "dependencies": {
