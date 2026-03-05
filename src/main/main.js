@@ -28,6 +28,10 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
 
+  if (!app.isPackaged) {
+    mainWindow.webContents.openDevTools();
+  }
+
   contextMenuKur(mainWindow);
 
   mainWindow.once('ready-to-show', () => {
